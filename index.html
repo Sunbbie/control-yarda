@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Despacho — Asignación de Máquinas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Archivo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1116;
+    --bg-elev: #161b22;
+    --bg-elev-2: #1c232c;
+    --border: #2a323d;
+    --text: #e6edf3;
+    --text-dim: #8b96a3;
+    --text-faint: #5a6573;
+    --accent: #f5a524;
+    --success: #2ea043;
+    --success-bg: rgba(46, 160, 67, 0.12);
+    --danger: #f85149;
+    --danger-bg: rgba(248, 81, 73, 0.12);
+    --warning: #d29922;
+    --info: #58a6ff;
+    --grid: rgba(255,255,255,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Archivo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ===== HEADER ===== */
+  header {
+    background: var(--bg-elev);
+    border-bottom: 2px solid var(--accent);
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-mark {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    color: #000;
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    font-size: 22px;
+    border-radius: 4px;
+  }
+  .brand-text h1 {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .brand-text p {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 4px rgba(46, 160, 67, 0.15);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.error { background: var(--danger); box-shadow: 0 0 0 4px rgba(248, 81, 73, 0.15); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* ===== MAIN ===== */
+  main {
+    padding: 20px 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* ===== RESUMEN RAPIDO ===== */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid var(--accent);
+  }
+  .stat.success { border-left-color: var(--success); }
+  .stat.danger { border-left-color: var(--danger); }
+  .stat.info { border-left-color: var(--info); }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* ===== SECCIONES ===== */
+  .section {
+    margin-bottom: 28px;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .section-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .section-dot.green { background: var(--success); box-shadow: 0 0 12px var(--success); }
+  .section-dot.red { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
+
+  /* ===== FILTROS ===== */
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    font-family: 'Archivo', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { color: var(--text); border-color: var(--text-dim); }
+  .filter-btn.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+  .filter-btn .count {
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 6px;
+    opacity: 0.7;
+  }
+
+  /* ===== TARJETAS DISPONIBLES ===== */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .machine-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--success);
+    padding: 16px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .machine-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--success);
+    box-shadow: 0 8px 20px rgba(46, 160, 67, 0.15);
+  }
+  .machine-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    background: var(--success-bg);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+  }
+  .card-name {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .card-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card-section-label {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .card-operators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .op-chip {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .op-chip.busy {
+    background: rgba(248, 81, 73, 0.08);
+    border-color: rgba(248, 81, 73, 0.25);
+    color: var(--text-faint);
+    text-decoration: line-through;
+  }
+  .op-chip.free {
+    background: var(--success-bg);
+    border-color: rgba(46, 160, 67, 0.3);
+    color: var(--success);
+  }
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-elev);
+    border: 1px dashed var(--border);
+  }
+
+  /* ===== TABLA OCUPADAS ===== */
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+  }
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--bg-elev-2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  tbody tr:hover { background: rgba(245, 165, 36, 0.04); }
+  .machine-name {
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Archivo', sans-serif;
+  }
+  .badge-zone {
+    background: rgba(88, 166, 255, 0.12);
+    color: var(--info);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+  }
+  .time-out { color: var(--accent); font-weight: 600; }
+  .empty-cell { color: var(--text-faint); }
+  .alert-row { background: rgba(248, 81, 73, 0.05) !important; }
+  .alert-row .time-out { color: var(--danger); }
+
+  /* ===== UNAVAILABLE (no operadores libres) ===== */
+  .machine-card.no-ops {
+    border-left-color: var(--warning);
+    opacity: 0.75;
+  }
+  .machine-card.no-ops::before { background: rgba(210, 153, 34, 0.12); }
+  .machine-card.no-ops .card-name { color: var(--warning); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    main { padding: 12px; }
+    header { padding: 10px 14px; }
+    .quick-stats { grid-template-columns: repeat(2, 1fr); }
+    .stat-value { font-size: 26px; }
+    .status { width: 100%; justify-content: space-between; }
+  }
+  @media (max-width: 500px) {
+    .quick-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    thead { display: none; }
+    tbody tr { display: block; padding: 10px 0; border-bottom: 2px solid var(--border); }
+    tbody td { display: flex; justify-content: space-between; padding: 6px 16px; border: none; }
+    tbody td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-dim);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">⚙</div>
+    <div class="brand-text">
+      <h1>Despacho de Maquinaria</h1>
+      <p>¿A quién mando? · Vista de Asignación</p>
+    </div>
+  </div>
+  <div class="status">
+    <div class="status-item">
+      <span class="status-dot" id="conn-dot"></span>
+      <span id="conn-text">CONECTADO</span>
+    </div>
+    <div class="status-item">
+      <span>HORA:</span>
+      <span id="now-time" style="color:var(--text);">--:--</span>
+    </div>
+    <div class="status-item">
+      <span>ACTUALIZADO:</span>
+      <span id="last-update" style="color:var(--text);">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ESTADISTICAS RAPIDAS -->
+  <section class="quick-stats">
+    <div class="stat success">
+      <div>
+        <div class="stat-label">Tipos Asignables</div>
+        <div class="stat-value mono" id="stat-libres">0</div>
+      </div>
+    </div>
+    <div class="stat danger">
+      <div>
+        <div class="stat-label">Trabajando</div>
+        <div class="stat-value mono" id="stat-fuera">0</div>
+      </div>
+    </div>
+    <div class="stat info">
+      <div>
+        <div class="stat-label">Operadores Libres</div>
+        <div class="stat-value mono" id="stat-ops-libres">0</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div>
+        <div class="stat-label">Operadores Activos</div>
+        <div class="stat-value mono" id="stat-ops-activos">0</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISPONIBLES PARA ASIGNAR -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-dot green"></span>
+        Disponibles para Asignar
+      </div>
+      <div class="filters" id="type-filters">
+        <button class="filter-btn active" data-filter="all">Todas <span class="count" id="cnt-all">0</span></button>
+      </div>
+    </div>
+    <div class="cards-grid" id="available-grid">
+      <div class="empty-state">Cargando…</div>
+    </div>
+  </section>
+
+  <!-- TRABAJANDO AHORA -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-dot red"></span>
+        Trabajando Ahora · Fuera de Yarda
+      </div>
+      <div class="filters" id="zone-filters"></div>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Máquina</th>
+              <th>Operador</th>
+              <th>Zona</th>
+              <th>Salió</th>
+              <th>Tiempo</th>
+              <th>Observaciones</th>
+            </tr>
+          </thead>
+          <tbody id="busy-body">
+            <tr><td colspan="6" class="empty-cell" style="text-align:center;padding:30px;">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+const CONFIG = {
+  MODE: 'CSV',
+  CSV_OPS:      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyeSgFx08vM_UtTuG68DJ5o1aaV4wAR20n9NFmOuCodeEKnUDVZR2dalqmiSK5U4j0U30f8NVjXB3k/pub?gid=503736896&single=true&output=csv',
+  CSV_CATALOG:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyeSgFx08vM_UtTuG68DJ5o1aaV4wAR20n9NFmOuCodeEKnUDVZR2dalqmiSK5U4j0U30f8NVjXB3k/pub?gid=150658585&single=true&output=csv',
+  CSV_OPERATORS:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyeSgFx08vM_UtTuG68DJ5o1aaV4wAR20n9NFmOuCodeEKnUDVZR2dalqmiSK5U4j0U30f8NVjXB3k/pub?gid=1115583643&single=true&output=csv',
+  REFRESH_MS: 30_000,
+  ALERT_HOURS: 8,
+
+  // FALLBACK DATA — para que puedas probar sin conectar Sheets aún
+  USE_DEMO: false,
+  DEMO_DATA: {
+    catalog: [
+      { maquina: 'Dompe 12',   tipo: 'Dompe',          capacidad: '10m³', activa: 'Sí' },
+      { maquina: 'Dompe 7',    tipo: 'Dompe',          capacidad: '7m³',  activa: 'Sí' },
+      { maquina: 'Dompe 15',   tipo: 'Dompe',          capacidad: '14m³', activa: 'Sí' },
+      { maquina: 'Retro 2',    tipo: 'Retroexcavadora',capacidad: 'Med',  activa: 'Sí' },
+      { maquina: 'Retro 5',    tipo: 'Retroexcavadora',capacidad: 'Gran', activa: 'Sí' },
+      { maquina: 'Bobcat 1',   tipo: 'Minicargador',   capacidad: '—',    activa: 'Sí' },
+      { maquina: 'Compactador A',tipo:'Compactador',   capacidad: '—',    activa: 'Sí' }
+    ],
+    operators: [
+      { operador: 'Juan Pérez',     maquinas: 'Dompe 12, Dompe 7, Dompe 15', activo: 'Sí' },
+      { operador: 'Pedro López',    maquinas: 'Retro 2, Retro 5, Bobcat 1',  activo: 'Sí' },
+      { operador: 'Miguel Ramírez', maquinas: 'Dompe 12, Compactador A',     activo: 'Sí' },
+      { operador: 'Luis García',    maquinas: 'Retro 2, Bobcat 1',           activo: 'Sí' },
+      { operador: 'Carlos Mendoza', maquinas: 'Dompe 7, Dompe 15',           activo: 'Sí' }
+    ],
+    operations: [
+      { fecha: todayISO(), maquina: 'Dompe 12', operador: 'Juan Pérez',   salida: '07:10', entrada: '',      ubicacion: 'Maneadero',    observaciones: 'Acarreo material' },
+      { fecha: todayISO(), maquina: 'Retro 5',  operador: 'Pedro López',  salida: '06:30', entrada: '',      ubicacion: 'Ojos Negros',  observaciones: 'Excavación zanja' },
+      { fecha: todayISO(), maquina: 'Dompe 7',  operador: 'Carlos Mendoza',salida:'08:00', entrada: '15:30', ubicacion: 'Patio',        observaciones: 'OK' },
+      { fecha: todayISO(), maquina: 'Compactador A',operador:'Miguel Ramírez',salida:'07:45',entrada:'',     ubicacion: 'San Vicente',  observaciones: '' }
+    ]
+  }
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r') {}
+      else field += c;
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(c => c && c.trim()));
+}
+
+function rowsToObjects(rows) {
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  return rows.slice(1).map(r => {
+    const o = {};
+    headers.forEach((h, i) => o[h] = (r[i] || '').trim());
+    return o;
+  });
+}
+
+function parseTime(timeStr, dateStr) {
+  if (!timeStr) return null;
+  const clean = timeStr.trim().toUpperCase();
+  const m = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  if (m[3] === 'PM' && h < 12) h += 12;
+  if (m[3] === 'AM' && h === 12) h = 0;
+  const base = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+  base.setHours(h, min, 0, 0);
+  return base;
+}
+
+function formatDuration(ms) {
+  if (ms < 0) return '—';
+  const mins = Math.floor(ms / 60000);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h ${String(m).padStart(2,'0')}m`;
+}
+
+function escape(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+// ============================================================
+// DATA FETCH
+// ============================================================
+async function fetchSheet(url) {
+  const res = await fetch(url + '&t=' + Date.now());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  return rowsToObjects(parseCSV(text));
+}
+
+async function loadData() {
+  if (CONFIG.USE_DEMO) {
+    return {
+      catalog: CONFIG.DEMO_DATA.catalog,
+      operators: CONFIG.DEMO_DATA.operators,
+      operations: CONFIG.DEMO_DATA.operations
+    };
+  }
+  const [catalog, operators, operations] = await Promise.all([
+    fetchSheet(CONFIG.CSV_CATALOG),
+    fetchSheet(CONFIG.CSV_OPERATORS),
+    fetchSheet(CONFIG.CSV_OPS)
+  ]);
+  return { catalog, operators, operations };
+}
+
+// ============================================================
+// LÓGICA DE NEGOCIO
+// ============================================================
+function processState(data) {
+  const today = todayISO();
+  const now = new Date();
+
+  // Operaciones de hoy
+  const todayOps = data.operations
+    .filter(r => (r.fecha || today) === today && r.maquina)
+    .map(r => {
+      const salida = parseTime(r.salida, r.fecha || today);
+      const entrada = parseTime(r.entrada, r.fecha || today);
+      const estaFuera = !!salida && !entrada;
+      const tiempoMs = salida ? (entrada || now) - salida : 0;
+      return {
+        ...r,
+        salida, entrada, estaFuera,
+        tiempoMs,
+        tiempoFmt: salida ? formatDuration(tiempoMs) : '—',
+        alerta: estaFuera && (tiempoMs > CONFIG.ALERT_HOURS * 3600000)
+      };
+    });
+
+  // Máquinas y operadores ocupados
+  const ocupadas = todayOps.filter(r => r.estaFuera);
+  const maquinasOcupadas = new Set(ocupadas.map(r => r.maquina));
+  const operadoresOcupados = new Set(ocupadas.map(r => r.operador).filter(Boolean));
+
+  // Catálogo activo
+  const activeCatalog = data.catalog.filter(m =>
+    (m.activa || '').toLowerCase().match(/sí|si|yes|y|true|1/));
+
+  // Operadores activos
+  const activeOperators = data.operators.filter(o =>
+    (o.activo || '').toLowerCase().match(/sí|si|yes|y|true|1/));
+
+  // Disponibles: TODAS las máquinas del catálogo, mostrando operadores libres/ocupados
+  const disponibles = activeCatalog
+    .map(m => {
+      // Encontrar operadores que pueden operar esta máquina y no están ocupados
+      const opsCapaces = activeOperators.filter(o => {
+        const machines = (o.maquinas || '').split(',').map(s => s.trim());
+        return machines.includes(m.maquina);
+      });
+      const opsLibres = opsCapaces.filter(o => !operadoresOcupados.has(o.operador));
+      const opsOcupados = opsCapaces.filter(o => operadoresOcupados.has(o.operador));
+      return {
+        ...m,
+        opsCapaces, opsLibres, opsOcupados,
+        asignable: opsLibres.length > 0
+      };
+    });
+
+  // Operadores libres totales
+  const opsLibres = activeOperators.filter(o => !operadoresOcupados.has(o.operador));
+
+  return {
+    disponibles,
+    ocupadas,
+    activeCatalog,
+    activeOperators,
+    operadoresOcupados,
+    opsLibres
+  };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+let activeTypeFilter = 'all';
+let activeZoneFilter = 'all';
+
+function renderStats(state) {
+  document.getElementById('stat-libres').textContent = state.disponibles.filter(d => d.asignable).length;
+  document.getElementById('stat-fuera').textContent = state.ocupadas.length;
+  document.getElementById('stat-ops-libres').textContent = state.opsLibres.length;
+  document.getElementById('stat-ops-activos').textContent = state.operadoresOcupados.size;
+}
+
+function renderTypeFilters(state) {
+  const container = document.getElementById('type-filters');
+  const types = [...new Set(state.disponibles.map(d => d.tipo))].sort();
+  const counts = {};
+  state.disponibles.forEach(d => { counts[d.tipo] = (counts[d.tipo] || 0) + (d.asignable ? 1 : 0); });
+  const totalAsignable = state.disponibles.filter(d => d.asignable).length;
+
+  container.innerHTML = `
+    <button class="filter-btn ${activeTypeFilter === 'all' ? 'active' : ''}" data-filter="all">
+      Todas <span class="count">${totalAsignable}</span>
+    </button>
+    ${types.map(t => `
+      <button class="filter-btn ${activeTypeFilter === t ? 'active' : ''}" data-filter="${escape(t)}">
+        ${escape(t)}s <span class="count">${counts[t] || 0}</span>
+      </button>
+    `).join('')}
+  `;
+
+  container.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTypeFilter = btn.dataset.filter;
+      renderAvailable(state);
+      renderTypeFilters(state);
+    });
+  });
+}
+
+function renderAvailable(state) {
+  const grid = document.getElementById('available-grid');
+  let items = state.disponibles;
+  if (activeTypeFilter !== 'all') {
+    items = items.filter(d => d.tipo === activeTypeFilter);
+  }
+
+  // Ordenar: asignables primero
+  items.sort((a, b) => (b.asignable ? 1 : 0) - (a.asignable ? 1 : 0));
+
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty-state">No hay máquinas disponibles en este filtro</div>';
+    return;
+  }
+
+  grid.innerHTML = items.map(m => `
+    <div class="machine-card ${m.asignable ? '' : 'no-ops'}">
+      <div class="card-name">${escape(m.maquina)}</div>
+      <div class="card-type">${escape(m.tipo)}${m.capacidad && m.capacidad !== '—' ? ' · ' + escape(m.capacidad) : ''}</div>
+      <div class="card-section-label">${m.asignable ? 'Operadores disponibles' : '⚠ Sin operadores libres'}</div>
+      <div class="card-operators">
+        ${m.opsLibres.map(o => `<span class="op-chip free">${escape(o.operador)}</span>`).join('')}
+        ${m.opsOcupados.map(o => `<span class="op-chip busy">${escape(o.operador)}</span>`).join('')}
+        ${(!m.opsLibres.length && !m.opsOcupados.length) ? '<span class="op-chip">Sin operadores asignados</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderZoneFilters(state) {
+  const container = document.getElementById('zone-filters');
+  const zones = [...new Set(state.ocupadas.map(o => o.ubicacion).filter(Boolean))].sort();
+  if (!zones.length) {
+    container.innerHTML = '';
+    return;
+  }
+  const counts = {};
+  state.ocupadas.forEach(o => { counts[o.ubicacion] = (counts[o.ubicacion] || 0) + 1; });
+
+  container.innerHTML = `
+    <button class="filter-btn ${activeZoneFilter === 'all' ? 'active' : ''}" data-filter="all">
+      Todas zonas <span class="count">${state.ocupadas.length}</span>
+    </button>
+    ${zones.map(z => `
+      <button class="filter-btn ${activeZoneFilter === z ? 'active' : ''}" data-filter="${escape(z)}">
+        ${escape(z)} <span class="count">${counts[z] || 0}</span>
+      </button>
+    `).join('')}
+  `;
+  container.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeZoneFilter = btn.dataset.filter;
+      renderBusy(state);
+      renderZoneFilters(state);
+    });
+  });
+}
+
+function renderBusy(state) {
+  const tbody = document.getElementById('busy-body');
+  let items = state.ocupadas;
+  if (activeZoneFilter !== 'all') {
+    items = items.filter(o => o.ubicacion === activeZoneFilter);
+  }
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-cell" style="text-align:center;padding:30px;">Ninguna máquina trabajando en este filtro</td></tr>`;
+    return;
+  }
+  // Ordenar por más tiempo fuera primero
+  items.sort((a, b) => b.tiempoMs - a.tiempoMs);
+
+  tbody.innerHTML = items.map(r => `
+    <tr class="${r.alerta ? 'alert-row' : ''}">
+      <td data-label="Máquina" class="machine-name">${escape(r.maquina)}</td>
+      <td data-label="Operador">${escape(r.operador) || '<span class="empty-cell">—</span>'}</td>
+      <td data-label="Zona"><span class="badge badge-zone">${escape(r.ubicacion || '—')}</span></td>
+      <td data-label="Salió">${escape(r.salida ? r.salida.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}) : '—')}</td>
+      <td data-label="Tiempo" class="time-out">${r.tiempoFmt}</td>
+      <td data-label="Obs.">${escape(r.observaciones) || '<span class="empty-cell">—</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// CICLO PRINCIPAL
+// ============================================================
+function setConnState(ok, msg) {
+  const dot = document.getElementById('conn-dot');
+  const txt = document.getElementById('conn-text');
+  dot.classList.toggle('error', !ok);
+  txt.textContent = msg;
+}
+
+function updateClock() {
+  const d = new Date();
+  document.getElementById('now-time').textContent =
+    d.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', hour12:false });
+  document.getElementById('last-update').textContent =
+    d.toLocaleTimeString('es-MX', { hour12: false });
+}
+
+async function refresh() {
+  try {
+    const data = await loadData();
+    const state = processState(data);
+    renderStats(state);
+    renderTypeFilters(state);
+    renderAvailable(state);
+    renderZoneFilters(state);
+    renderBusy(state);
+    setConnState(true, CONFIG.USE_DEMO ? 'DEMO' : 'CONECTADO');
+    updateClock();
+  } catch (err) {
+    console.error('Error:', err);
+    setConnState(false, 'ERROR');
+    document.getElementById('busy-body').innerHTML =
+      `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);">⚠ Error: ${escape(err.message)}</td></tr>`;
+  }
+}
+
+refresh();
+setInterval(refresh, CONFIG.REFRESH_MS);
+setInterval(updateClock, 30_000);
+</script>
+</body>
+</html>
